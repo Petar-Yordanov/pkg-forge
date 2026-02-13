@@ -1,0 +1,101 @@
+schemaVersion: 1
+
+defaults:
+  step:
+    failOnStderr: false
+  validation:
+    failOnStderr: true
+
+entries:
+  - kind: package
+    name: git
+    version: "2.44.0"
+    fallbackVersion: "2.43.0"
+    platform: [windows, linux, macos]
+    arch: [amd64, arm64]
+    tags: [base, dev, vcs]
+
+    preInstall:
+      - cmd: "echo preparing git install"
+        failOnStderr: false
+
+    postInstall:
+      - cmd: "echo git installed"
+        failOnStderr: false
+
+    validation:
+      - cmd: "git --version"
+
+  - kind: package
+    name: nodejs
+    version: "20.11.1"
+    platform: [windows, linux, macos]
+    arch: [amd64, arm64]
+    tags: [dev, lang, node]
+
+    validation:
+      - cmd: "node --version"
+      - cmd: "npm --version"
+
+  - kind: package
+    name: docker
+    version: "latest"
+    platform: [windows, linux, macos]
+    arch: [amd64, arm64]
+    tags: [dev, containers]
+
+    postInstall:
+      - when: { platform: linux }
+        cmd: "sudo systemctl enable --now docker"
+
+    validation:
+      - cmd: "docker --version"
+      - cmd: "docker info"
+
+  - kind: script
+    name: bootstrap-dotfiles
+    platform: [windows, linux, macos]
+    arch: [amd64, arm64]
+    tags: [base, dotfiles]
+
+    pre:
+      - file: "./scripts/ensure-shell.sh"
+        failOnStderr: true
+
+    run:
+      - cmd: "echo starting dotfiles bootstrap"
+      - when: { platform: linux }
+        file: "./scripts/bootstrap.sh"
+        shell: "bash"
+        args: ["-e"]
+      - when: { platform: macos }
+        file: "./scripts/bootstrap.sh"
+        shell: "bash"
+        args: ["-e"]
+      - when: { platform: windows }
+        file: ".\\scripts\\bootstrap.ps1"
+        shell: "pwsh"
+        args: ["-NoProfile", "-ExecutionPolicy", "Bypass"]
+
+    post:
+      - cmd: "echo finished dotfiles bootstrap"
+
+    validation:
+      - when: { platform: linux }
+        cmd: 'test -d "$HOME"'
+      - when: { platform: windows }
+        cmd: 'pwsh -NoProfile -Command "$PSVersionTable.PSVersion"'
+
+  - kind: script
+    name: setup-gitconfig
+    platform: [windows, linux, macos]
+    arch: [amd64, arm64]
+    tags: [dev, git]
+
+    run:
+      - cmd: "git config --global init.defaultBranch main"
+      - cmd: "git config --global pull.rebase false"
+
+    validation:
+      - cmd: "git config --global --get init.defaultBranch"
+      - cmd: "git config --global --get pull.rebase"

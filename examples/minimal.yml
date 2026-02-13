@@ -1,0 +1,27 @@
+schemaVersion: 1
+
+defaults:
+  step:
+    failOnStderr: false
+  validation:
+    failOnStderr: true
+
+entries:
+  - kind: package
+    name: git
+    version: "2.44.0"
+    platform: [windows, linux, macos]
+    arch: [amd64, arm64]
+    tags: [base]
+    validation:
+      - cmd: "git --version"
+
+  - kind: script
+    name: hello
+    platform: [windows, linux, macos]
+    arch: [amd64, arm64]
+    tags: [base]
+    run:
+      - cmd: "echo hello from script entry"
+    validation:
+      - cmd: "echo ok"
