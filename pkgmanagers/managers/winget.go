@@ -91,6 +91,7 @@ func (Winget) InstallLatest(name string) error {
 		return nil
 	}
 
+	// TODO: More robust solution for this
 	// Treat "already installed/no upgrade" as success for InstallLatest semantics.
 	l := strings.ToLower(out)
 	if strings.Contains(l, "no available upgrade found") ||
