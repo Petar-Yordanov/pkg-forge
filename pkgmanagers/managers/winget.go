@@ -48,14 +48,14 @@ func (Winget) Install(name string, version string) error {
 	}
 
 	args := []string{
-		"install",
-		"--exact",
-		"--id", name,
-		"--source", "winget",
-		"--silent",
-		"--accept-source-agreements",
-		"--accept-package-agreements",
-		"--disable-interactivity",
+	  "install",
+	  "--exact",
+	  "--id", name,
+	  "--source", "winget",
+	  "--silent",
+	  "--accept-source-agreements",
+	  "--accept-package-agreements",
+	  "--disable-interactivity",
 	}
 
 	if version != "" {
@@ -76,14 +76,14 @@ func (Winget) InstallLatest(name string) error {
 	}
 
 	args := []string{
-		"install",
-		"--exact",
-		"--id", name,
-		"--source", "winget",
-		"--silent",
-		"--accept-source-agreements",
-		"--accept-package-agreements",
-		"--disable-interactivity",
+	  "install",
+	  "--exact",
+	  "--id", name,
+	  "--source", "winget",
+	  "--silent",
+	  "--accept-source-agreements",
+	  "--accept-package-agreements",
+	  "--disable-interactivity",
 	}
 
 	out, err := Command(bin).Args(args...).RunTrimOutput()
@@ -112,18 +112,13 @@ func (Winget) Uninstall(name string) error {
 	}
 
 	args := []string{
-		"uninstall",
-		"--exact",
-		"--id", name,
-
-		// avoid msstore prompts/agreements
-		"--source", "winget",
-
-		// non-interactive
-		"--silent",
-		"--accept-source-agreements",
-		"--accept-package-agreements",
-		"--disable-interactivity",
+	  "uninstall",
+	  "--exact",
+	  "--id", name,
+	  "--source", "winget",
+	  "--silent",
+	  "--accept-source-agreements",
+	  "--disable-interactivity",
 	}
 
 	_, err := Command(bin).Args(args...).RunTrimOutput()
