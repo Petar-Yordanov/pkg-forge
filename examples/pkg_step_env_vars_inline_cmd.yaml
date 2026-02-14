@@ -1,0 +1,17 @@
+---
+entries:
+  - kind: package
+    name: something
+    version: "1.11.1"
+    failOnStderr: false
+
+    preInstall:
+      - cmd: echo "preparing with env"
+        env:
+          FOO: bar
+          HELLO: world
+
+      - when: { platform: linux }
+        cmd: bash -lc 'echo "HOME=$HOME"; echo "FOO=$FOO"'
+        env:
+          FOO: linux-only

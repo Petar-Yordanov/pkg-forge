@@ -1,101 +1,154 @@
-schemaVersion: 1
-
-defaults:
-  step:
-    failOnStderr: false
-  validation:
-    failOnStderr: true
-
+---
 entries:
   - kind: package
     name: git
     version: "2.44.0"
-    fallbackVersion: "2.43.0"
-    platform: [windows, linux, macos]
-    arch: [amd64, arm64]
-    tags: [base, dev, vcs]
+    failOnStderr: false
+
+    validation:
+      - cmd: git --version
+
+  - kind: package
+    name: all-features
+    version: "1.11.1"
+    failOnStderr: false
+
+    defaults:
+      step:
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+        timeoutSec: null
+        failOnStderr: false
 
     preInstall:
-      - cmd: "echo preparing git install"
-        failOnStderr: false
+      - cmd: echo "preparing to install all-features"
+        env:
+          LOG_LEVEL: debug
 
-    postInstall:
-      - cmd: "echo git installed"
-        failOnStderr: false
-
-    validation:
-      - cmd: "git --version"
-
-  - kind: package
-    name: nodejs
-    version: "20.11.1"
-    platform: [windows, linux, macos]
-    arch: [amd64, arm64]
-    tags: [dev, lang, node]
-
-    validation:
-      - cmd: "node --version"
-      - cmd: "npm --version"
-
-  - kind: package
-    name: docker
-    version: "latest"
-    platform: [windows, linux, macos]
-    arch: [amd64, arm64]
-    tags: [dev, containers]
-
-    postInstall:
       - when: { platform: linux }
-        cmd: "sudo systemctl enable --now docker"
+        cmd: sudo apt-get update
+        retries: 3
+        retryDelaySec: 2
+
+      - when: { platform: macos }
+        cmd: brew update
+        timeoutSec: 60
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Write-Host 'Preparing on Windows'"
+        timeoutSec: 30
+
+      - select:
+          default:
+            cmd: echo "preInstall select default"
+          windows:
+            cmd: pwsh -NoProfile -Command "Write-Host 'preInstall select windows'"
+
+      - cmdFile: ./scripts/preinstall/common.sh
+        shell: bash
+        args: [-e]
+        timeoutSec: 10
+
+    postInstall:
+      - cmd: echo "post-install steps for all-features"
+        failOnStderr: true
+
+      - when: { platform: linux }
+        cmd: sudo systemctl enable --now all-features
+        timeoutSec: 20
+
+      - when: { platform: macos }
+        cmd: brew services start all-features
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Start-Service all-features"
+        retries: 5
+        retryDelaySec: 2
+
+      - cmd: echo "some tools print warnings to stderr"
+        failOnStderr: false
+
+      - select:
+          default:
+            cmdFile: ./scripts/postinstall/default.sh
+            shell: bash
+            args: [-e]
+          windows:
+            cmdFile: .\scripts\postinstall\windows.ps1
+            shell: pwsh
+            args: [-NoProfile, -ExecutionPolicy, Bypass]
 
     validation:
-      - cmd: "docker --version"
-      - cmd: "docker info"
+      - cmd: all-features --version
+
+      - when: { platform: linux }
+        cmd: all-features status
+
+      - cmdFile: ./scripts/validate/basic.sh
+        shell: bash
+        args: [-e]
+
+      - select:
+          default:
+            cmd: echo "validation select default"
+          windows:
+            cmd: pwsh -NoProfile -Command "Write-Host 'validation select windows'"
 
   - kind: script
     name: bootstrap-dotfiles
-    platform: [windows, linux, macos]
-    arch: [amd64, arm64]
-    tags: [base, dotfiles]
 
     pre:
-      - file: "./scripts/ensure-shell.sh"
+      - cmdFile: ./scripts/ensure-shell.sh
+        shell: bash
+        args: [-e]
         failOnStderr: true
 
-    run:
-      - cmd: "echo starting dotfiles bootstrap"
-      - when: { platform: linux }
-        file: "./scripts/bootstrap.sh"
-        shell: "bash"
-        args: ["-e"]
-      - when: { platform: macos }
-        file: "./scripts/bootstrap.sh"
-        shell: "bash"
-        args: ["-e"]
-      - when: { platform: windows }
-        file: ".\\scripts\\bootstrap.ps1"
-        shell: "pwsh"
-        args: ["-NoProfile", "-ExecutionPolicy", "Bypass"]
+      - select:
+          default:
+            cmd: echo "script pre select default"
+          windows:
+            cmd: pwsh -NoProfile -Command "Write-Host 'script pre select windows'"
+
+    cmd:
+      select:
+        linux:
+          cmdFile: ./scripts/bootstrap.sh
+          shell: bash
+          args: [-e]
+        macos:
+          cmdFile: ./scripts/bootstrap.sh
+          shell: bash
+          args: [-e]
+        windows:
+          cmdFile: .\scripts\bootstrap.ps1
+          shell: pwsh
+          args: [-NoProfile, -ExecutionPolicy, Bypass]
 
     post:
-      - cmd: "echo finished dotfiles bootstrap"
-
-    validation:
-      - when: { platform: linux }
-        cmd: 'test -d "$HOME"'
-      - when: { platform: windows }
-        cmd: 'pwsh -NoProfile -Command "$PSVersionTable.PSVersion"'
+      - cmd: echo finished dotfiles bootstrap
 
   - kind: script
     name: setup-gitconfig
-    platform: [windows, linux, macos]
-    arch: [amd64, arm64]
-    tags: [dev, git]
 
-    run:
-      - cmd: "git config --global init.defaultBranch main"
-      - cmd: "git config --global pull.rebase false"
+    steps:
+      - cmd: git config --global init.defaultBranch main
+
+      - cmd: git config --global pull.rebase false
+        env:
+          SOME_FLAG: "1"
+        timeoutSec: 5
+        retries: 1
+        retryDelaySec: 1
+
+      - select:
+          default:
+            cmd: echo "script steps select default"
+          windows:
+            cmd: pwsh -NoProfile -Command "Write-Host 'script steps select windows'"
 
     validation:
-      - cmd: "git config --global --get init.defaultBranch"
-      - cmd: "git config --global --get pull.rebase"
+      - cmd: git config --global --get init.defaultBranch
+      - cmd: git config --global --get pull.rebase

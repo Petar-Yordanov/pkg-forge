@@ -7,7 +7,7 @@ import (
 	"os"
 	"sort"
 
-	detect "github.com/Petar-Yordanov/pkg-forge/pkgmanagers"
+	"github.com/Petar-Yordanov/pkg-forge/pkgmanagers"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +17,7 @@ var detectCmd = &cobra.Command{
 	Use:   "detect",
 	Short: "Detect available package managers",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		statuses := detect.DetectAll(context.Background())
+		statuses := pkgmanagers.DetectAll(context.Background())
 		sort.Slice(statuses, func(i, j int) bool { return statuses[i].Name < statuses[j].Name })
 
 		if detectJSON {

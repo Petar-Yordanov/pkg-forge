@@ -1,0 +1,21 @@
+---
+entries:
+  - kind: package
+    name: docker
+    version: latest
+    failOnStderr: false
+
+    postInstall:
+      - when: { platform: linux }
+        cmdFile: ./scripts/docker/linux-enable.sh
+        shell: bash
+        args: [-e]
+
+      - when: { platform: windows }
+        cmdFile: .\scripts\docker\windows-check.ps1
+        shell: pwsh
+        args: [-NoProfile]
+
+    validation:
+      - cmd: docker --version
+      - cmd: docker info

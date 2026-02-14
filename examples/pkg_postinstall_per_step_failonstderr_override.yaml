@@ -1,0 +1,22 @@
+---
+entries:
+  - kind: package
+    name: nodejs
+    version: "20.11.1"
+    failOnStderr: false
+
+    postInstall:
+      - cmd: echo "warming npm cache / setting defaults"
+        failOnStderr: true
+
+      - when: { platform: linux }
+        cmd: npm config set fund false
+        failOnStderr: true
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "npm config set fund false"
+        failOnStderr: true
+
+    validation:
+      - cmd: node --version
+      - cmd: npm --version
