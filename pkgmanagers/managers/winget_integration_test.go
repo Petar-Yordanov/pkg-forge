@@ -8,7 +8,7 @@ import (
 	"github.com/Petar-Yordanov/pkg-forge/pkgmanagers/managers"
 )
 
-const wingetPkgID = "Git.Git"
+const wingetPkgID = "7zip.7zip"
 
 func TestWinget_Detect(t *testing.T) {
 	r, _ := (managers.Winget{}).Detect()

@@ -66,7 +66,41 @@ func (Winget) Install(name string, version string) error {
 	return err
 }
 
-func (Winget) InstallLatest(name string) error { return (Winget{}).Install(name, "") }
+func (Winget) InstallLatest(name string) error {
+	bin, ok := lo.Find([]string{"winget", "winget.exe"}, func(c string) bool {
+		_, err := exec.LookPath(c)
+		return err == nil
+	})
+	if !ok {
+		return nil
+	}
+
+	args := []string{
+		"install",
+		"--exact",
+		"--id", name,
+		"--source", "winget",
+		"--silent",
+		"--accept-source-agreements",
+		"--accept-package-agreements",
+		"--disable-interactivity",
+	}
+
+	out, err := Command(bin).Args(args...).RunTrimOutput()
+	if err == nil {
+		return nil
+	}
+
+	// Treat "already installed/no upgrade" as success for InstallLatest semantics.
+	l := strings.ToLower(out)
+	if strings.Contains(l, "no available upgrade found") ||
+		strings.Contains(l, "no newer package versions are available") ||
+		strings.Contains(l, "found an existing package already installed") {
+		return nil
+	}
+
+	return err
+}
 
 func (Winget) Uninstall(name string) error {
 	bin, ok := lo.Find([]string{"winget", "winget.exe"}, func(c string) bool {
@@ -81,7 +115,14 @@ func (Winget) Uninstall(name string) error {
 		"uninstall",
 		"--exact",
 		"--id", name,
+
+		// avoid msstore prompts/agreements
+		"--source", "winget",
+
+		// non-interactive
 		"--silent",
+		"--accept-source-agreements",
+		"--accept-package-agreements",
 		"--disable-interactivity",
 	}
 
