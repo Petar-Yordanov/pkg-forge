@@ -87,11 +87,24 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
+          $scoopRoot = Join-Path $env:USERPROFILE "scoop"
+          $scoopShims = Join-Path $scoopRoot "shims"
+
+          if (-not (Test-Path $scoopRoot)) {
             Write-Host "Scoop missing, installing..."
             Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
             iwr -useb get.scoop.sh | iex
           }
+
+          # Ensure scoop shims are on PATH for subsequent steps
+          if (Test-Path $scoopShims) {
+            Add-Content -Path $env:GITHUB_PATH -Value $scoopShims
+            $env:PATH = "$scoopShims;$env:PATH"
+          } else {
+            throw "Scoop shims folder not found at: $scoopShims"
+          }
+
+          # now this should work
           scoop --version
 
       - name: Windows - ensure WinGet
