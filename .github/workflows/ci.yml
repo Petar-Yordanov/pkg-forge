@@ -20,7 +20,7 @@ jobs:
     env:
       GO_VERSION: "1.23.x"
       PYTHON_VERSION: "3.12"
-      PKG_FORGE_INTEGRATION: "0"
+      PKG_FORGE_IT: "1"
 
     steps:
       - name: Checkout
@@ -37,20 +37,42 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install pipx
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install pipx (Linux/macOS)
+        if: runner.os != 'Windows'
         shell: bash
         run: |
+          set -e
           python -m pip install --upgrade pip
           python -m pip install --upgrade pipx
           python -m pipx ensurepath || true
+          pipx --version
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install pipx (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade pipx
+
+          $pipxHome = "C:\pipx"
+          $pipxBin  = "C:\pipx\bin"
+          New-Item -ItemType Directory -Force -Path $pipxHome | Out-Null
+          New-Item -ItemType Directory -Force -Path $pipxBin  | Out-Null
+
+          "PIPX_HOME=$pipxHome" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "PIPX_BIN_DIR=$pipxBin" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Add-Content -Path $env:GITHUB_PATH -Value $pipxBin
+
+          pipx --version
 
       - name: Ubuntu - ensure apt-get
         if: runner.os == 'Linux'
         shell: bash
         run: |
+          set -e
           command -v apt-get
           sudo apt-get update
 
@@ -58,16 +80,12 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
+          set -e
           if ! command -v brew >/dev/null 2>&1; then
             echo "Homebrew missing, installing..."
             /bin/bash -lc "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            # add brew to PATH for subsequent steps
-            if [ -d /opt/homebrew/bin ]; then
-              echo "/opt/homebrew/bin" >> $GITHUB_PATH
-            fi
-            if [ -d /usr/local/bin ]; then
-              echo "/usr/local/bin" >> $GITHUB_PATH
-            fi
+            if [ -d /opt/homebrew/bin ]; then echo "/opt/homebrew/bin" >> "$GITHUB_PATH"; fi
+            if [ -d /usr/local/bin ]; then echo "/usr/local/bin" >> "$GITHUB_PATH"; fi
           fi
           brew --version
 
@@ -87,7 +105,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $scoopRoot = Join-Path $env:USERPROFILE "scoop"
+          $scoopRoot  = Join-Path $env:USERPROFILE "scoop"
           $scoopShims = Join-Path $scoopRoot "shims"
 
           if (-not (Test-Path $scoopRoot)) {
@@ -96,7 +114,6 @@ jobs:
             iwr -useb get.scoop.sh | iex
           }
 
-          # Ensure scoop shims are on PATH for subsequent steps
           if (Test-Path $scoopShims) {
             Add-Content -Path $env:GITHUB_PATH -Value $scoopShims
             $env:PATH = "$scoopShims;$env:PATH"
@@ -104,7 +121,6 @@ jobs:
             throw "Scoop shims folder not found at: $scoopShims"
           }
 
-          # now this should work
           scoop --version
 
       - name: Windows - ensure WinGet
@@ -140,12 +156,28 @@ jobs:
           scoop --version
           winget --version
 
-      - name: Go build
+      - name: Go build (Linux/macOS)
+        if: runner.os != 'Windows'
         shell: bash
+        run: |
+          set -e
+          go build ./...
+
+      - name: Go test (Linux/macOS)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -e
+          go test ./... -count=1 -v
+
+      - name: Go build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
           go build ./...
 
-      - name: Go test
-        shell: bash
+      - name: Go test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
           go test ./... -count=1 -v
