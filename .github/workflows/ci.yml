@@ -20,7 +20,7 @@ jobs:
     env:
       GO_VERSION: "1.23.x"
       PYTHON_VERSION: "3.12"
-      PKG_FORGE_IT: "1"
+      RUN_INTEGRATION: "1"
 
     steps:
       - name: Checkout
