@@ -1,5 +1,11 @@
 package traverse
 
+import (
+	"fmt"
+
+	"github.com/Petar-Yordanov/pkg-forge/manifest"
+)
+
 type Decision int
 
 const (
@@ -12,7 +18,9 @@ type Rule interface {
 	Decide(ref StepRef) (Decision, error)
 }
 
-func WalkWithRules(plans []StepPlan, rules []Rule, fn WalkFn) error {
+var ErrWalkStopped = fmt.Errorf("walk stopped")
+
+func WalkWithRules(plans []manifest.StepPlan, rules []Rule, fn WalkFn) error {
 	return WalkPlans(plans, func(ref StepRef) error {
 		for _, r := range rules {
 			dec, err := r.Decide(ref)
@@ -29,5 +37,3 @@ func WalkWithRules(plans []StepPlan, rules []Rule, fn WalkFn) error {
 		return fn(ref)
 	})
 }
-
-var ErrWalkStopped = fmt.Errorf("walk stopped")

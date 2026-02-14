@@ -1,14 +1,17 @@
 package traverse
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/Petar-Yordanov/pkg-forge/manifest"
+)
 
 type WalkFn func(ref StepRef) error
 
-func WalkPlans(plans []StepPlan, fn WalkFn) error {
+func WalkPlans(plans []manifest.StepPlan, fn WalkFn) error {
 	for ei := range plans {
 		p := plans[ei]
 
-		emitList := func(phase Phase, list []ResolvedStep) error {
+		emitList := func(phase Phase, list []manifest.ResolvedStep) error {
 			for i := range list {
 				rs := &list[i]
 				if err := fn(StepRef{

@@ -1,5 +1,7 @@
 package traverse
 
+import "github.com/Petar-Yordanov/pkg-forge/manifest"
+
 type Phase string
 
 const (
@@ -20,5 +22,5 @@ type StepRef struct {
 
 	Phase Phase
 	Index int
-	Step  *ResolvedStep
+	Step  *manifest.ResolvedStep
 }
