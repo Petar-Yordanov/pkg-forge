@@ -183,14 +183,14 @@ jobs:
           go test ./... -count=1 -v
 
       - name: Go test (integration) (Linux/macOS)
-        if: runner.os != 'Windows' && github.event_name == 'workflow_dispatch'
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           set -e
           go test -tags=integration ./... -count=1 -v
 
       - name: Go test (integration) (Windows)
-        if: runner.os == 'Windows' && github.event_name == 'workflow_dispatch'
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           go test -tags=integration ./... -count=1 -v
