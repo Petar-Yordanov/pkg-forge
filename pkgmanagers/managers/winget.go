@@ -47,10 +47,21 @@ func (Winget) Install(name string, version string) error {
 		return nil
 	}
 
-	args := []string{"install", "--exact", "--id", name}
-	if version != "" {
-		args = []string{"install", "--exact", "--id", name, "--version", version}
+	args := []string{
+		"install",
+		"--exact",
+		"--id", name,
+		"--source", "winget",
+		"--silent",
+		"--accept-source-agreements",
+		"--accept-package-agreements",
+		"--disable-interactivity",
 	}
+
+	if version != "" {
+		args = append(args, "--version", version)
+	}
+
 	_, err := Command(bin).Args(args...).RunTrimOutput()
 	return err
 }
@@ -66,6 +77,14 @@ func (Winget) Uninstall(name string) error {
 		return nil
 	}
 
-	_, err := Command(bin).Args("uninstall", "--exact", "--id", name).RunTrimOutput()
+	args := []string{
+		"uninstall",
+		"--exact",
+		"--id", name,
+		"--silent",
+		"--disable-interactivity",
+	}
+
+	_, err := Command(bin).Args(args...).RunTrimOutput()
 	return err
 }
