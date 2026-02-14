@@ -38,7 +38,6 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      # (optional) only if unit tests require these toolchains
       - name: Install pipx (Linux/macOS)
         if: runner.os != 'Windows'
         shell: bash
@@ -91,8 +90,6 @@ jobs:
   integration:
     name: integration (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    # If you ONLY want integration on manual runs, uncomment:
-    # if: github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -196,7 +193,6 @@ jobs:
           }
           winget --version
 
-      # ONLY integration tests:
       - name: Go test (integration) (Linux/macOS)
         if: runner.os != 'Windows'
         shell: bash
