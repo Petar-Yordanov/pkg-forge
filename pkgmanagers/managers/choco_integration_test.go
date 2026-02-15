@@ -3,23 +3,26 @@
 package managers_test
 
 import (
-	"testing"
-	"strings"
 	"regexp"
+	"strings"
+	"testing"
+
 	"github.com/Petar-Yordanov/pkg-forge/pkgmanagers/managers"
 )
 
 const chocoPkg = "git"
 
 func TestChoco_Detect(t *testing.T) {
-	r, _ := (managers.Choco{}).Detect()
+	m := &managers.Choco{}
+
+	r, _ := m.Detect()
 	if !r.Available {
 		t.Fatalf("expected choco available")
 	}
 }
 
 func TestChoco_GetVersion(t *testing.T) {
-	m := managers.Choco{}
+	m := &managers.Choco{}
 
 	r, _ := m.Detect()
 	if !r.Available {
@@ -42,7 +45,7 @@ func TestChoco_GetVersion(t *testing.T) {
 }
 
 func TestChoco_Install_Uninstall(t *testing.T) {
-	m := managers.Choco{}
+	m := &managers.Choco{}
 
 	if err := m.Install(chocoPkg, ""); err != nil {
 		t.Fatalf("install failed: %v", err)
@@ -53,7 +56,7 @@ func TestChoco_Install_Uninstall(t *testing.T) {
 }
 
 func TestChoco_InstallLatest_Uninstall(t *testing.T) {
-	m := managers.Choco{}
+	m := &managers.Choco{}
 
 	if err := m.InstallLatest(chocoPkg); err != nil {
 		t.Fatalf("install latest failed: %v", err)

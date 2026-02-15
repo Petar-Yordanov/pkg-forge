@@ -11,7 +11,7 @@ import (
 )
 
 func TestGo_GetVersion(t *testing.T) {
-	m := managers.Go{}
+	m := &managers.Go{}
 
 	r, _ := m.Detect()
 	if !r.Available {

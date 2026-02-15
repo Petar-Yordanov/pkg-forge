@@ -11,7 +11,7 @@ import (
 )
 
 func TestPip_GetVersion(t *testing.T) {
-	m := managers.Pip{}
+	m := &managers.Pip{}
 
 	r, _ := m.Detect()
 	if !r.Available {
@@ -28,7 +28,7 @@ func TestPip_GetVersion(t *testing.T) {
 		t.Fatalf("expected non-empty version")
 	}
 
-	if !regexp.MustCompile(`^\d+(\.\d+){1,3}([a-zA-Z0-9\.\-\+]+)?$`).MatchString(v) {
+	if !regexp.MustCompile(`^\d+(\.\d+){1,3}([a-zA-Z0-9.\-+]+)?$`).MatchString(v) {
 		t.Fatalf("unexpected version format: %q", v)
 	}
 }

@@ -3,9 +3,9 @@
 package managers_test
 
 import (
-	"testing"
-	"strings"
 	"regexp"
+	"strings"
+	"testing"
 
 	"github.com/Petar-Yordanov/pkg-forge/pkgmanagers/managers"
 )
@@ -13,14 +13,16 @@ import (
 const scoopPkg = "git"
 
 func TestScoop_Detect(t *testing.T) {
-	r, _ := (managers.Scoop{}).Detect()
+	m := &managers.Scoop{}
+
+	r, _ := m.Detect()
 	if !r.Available {
 		t.Fatalf("expected scoop available")
 	}
 }
 
 func TestScoop_GetVersion(t *testing.T) {
-	m := managers.Scoop{}
+	m := &managers.Scoop{}
 
 	r, _ := m.Detect()
 	if !r.Available {
@@ -43,7 +45,7 @@ func TestScoop_GetVersion(t *testing.T) {
 }
 
 func TestScoop_Install_Uninstall(t *testing.T) {
-	m := managers.Scoop{}
+	m := &managers.Scoop{}
 
 	if err := m.Install(scoopPkg, ""); err != nil {
 		t.Fatalf("install failed: %v", err)
@@ -54,7 +56,7 @@ func TestScoop_Install_Uninstall(t *testing.T) {
 }
 
 func TestScoop_InstallLatest_Uninstall(t *testing.T) {
-	m := managers.Scoop{}
+	m := &managers.Scoop{}
 
 	if err := m.InstallLatest(scoopPkg); err != nil {
 		t.Fatalf("install latest failed: %v", err)
