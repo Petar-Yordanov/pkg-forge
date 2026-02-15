@@ -155,6 +155,34 @@ jobs:
           if [ -x /usr/local/bin/brew ]; then echo "/usr/local/bin" >> "$GITHUB_PATH"; fi
           brew --version
 
+      - name: Ubuntu - ensure Homebrew (Linuxbrew)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if command -v brew >/dev/null 2>&1; then
+            brew --version
+            exit 0
+          fi
+
+          sudo apt-get update
+          sudo apt-get install -y build-essential curl file git
+
+          NONINTERACTIVE=1 /bin/bash -lc "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+          if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+            echo "/home/linuxbrew/.linuxbrew/sbin" >> "$GITHUB_PATH"
+          fi
+
+          if [ -x /home/runner/.linuxbrew/bin/brew ]; then
+            echo "/home/runner/.linuxbrew/bin" >> "$GITHUB_PATH"
+            echo "/home/runner/.linuxbrew/sbin" >> "$GITHUB_PATH"
+          fi
+
+          brew --version
+
       - name: Windows - ensure Chocolatey
         if: runner.os == 'Windows'
         shell: pwsh
