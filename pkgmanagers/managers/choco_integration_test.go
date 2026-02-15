@@ -4,7 +4,8 @@ package managers_test
 
 import (
 	"testing"
-
+	"strings"
+	"regexp"
 	"github.com/Petar-Yordanov/pkg-forge/pkgmanagers/managers"
 )
 
