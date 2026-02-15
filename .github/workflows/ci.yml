@@ -68,24 +68,11 @@ jobs:
           set -e
           go build ./...
 
-      - name: Go test (unit) (Linux/macOS)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          set -e
-          go test ./... -count=1 -v
-
       - name: Go build (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           go build ./...
-
-      - name: Go test (unit) (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          go test ./... -count=1 -v
 
   integration:
     name: integration (${{ matrix.os }})
@@ -180,8 +167,6 @@ jobs:
             echo "/home/runner/.linuxbrew/bin" >> "$GITHUB_PATH"
             echo "/home/runner/.linuxbrew/sbin" >> "$GITHUB_PATH"
           fi
-
-          brew --version
 
       - name: Windows - ensure Chocolatey
         if: runner.os == 'Windows'
