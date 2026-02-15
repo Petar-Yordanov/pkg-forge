@@ -2,42 +2,49 @@ package managers
 
 import (
 	"errors"
-	"os/exec"
 	"strings"
 	"time"
 
 	"github.com/Petar-Yordanov/pkg-forge/common"
 )
 
-type Brew struct{}
+type Brew struct {
+	locator ToolLocator
+}
 
-func (Brew) ID() string          { return "brew" }
-func (Brew) DisplayName() string { return "Homebrew" }
+func (*Brew) ID() string          { return "brew" }
+func (*Brew) DisplayName() string { return "Homebrew" }
 
-func (Brew) Platforms() []common.Platform {
+func (*Brew) Platforms() []common.Platform {
 	return []common.Platform{common.PlatformMacOS}
 }
 
-func (Brew) Detect() (DetectResult, error) {
+func (m *Brew) Detect() (DetectResult, error) {
 	cur := common.CurrentPlatform()
 
-	path, err := exec.LookPath("brew")
+	path, err := m.locator.Resolve("brew")
 	if err != nil {
-		return DetectResult{Available: false, Platform: cur}, errors.New("not found in PATH")
+		return DetectResult{Available: false, Platform: cur}, err
+	}
+
+	return DetectResult{Available: true, Path: path, Platform: cur}, nil
+}
+
+func (m *Brew) GetVersion() (string, error) {
+	path, err := m.locator.Resolve("brew")
+	if err != nil {
+		return "", err
 	}
 
 	out, err := Command(path).Args("--version").Timeout(2 * time.Second).RunTrimOutput()
 	if err != nil {
-		// Brew exists, but version command failed, so technically still "available"
-		return DetectResult{Available: true, Path: path, Platform: cur}, nil
+		return "", err
 	}
-
-	ver := strings.TrimSpace(out)
-	return DetectResult{Available: true, Path: path, Version: ver, Platform: cur}, nil
+	return strings.TrimSpace(out), nil
 }
 
-func (Brew) Install(name string, version string) error {
-	path, err := exec.LookPath("brew")
+func (m *Brew) Install(name string, version string) error {
+	path, err := m.locator.Resolve("brew")
 	if err != nil {
 		return errors.New("not found in PATH")
 	}
@@ -54,12 +61,10 @@ func (Brew) Install(name string, version string) error {
 	return err
 }
 
-func (Brew) InstallLatest(name string) error {
-	return (Brew{}).Install(name, "")
-}
+func (m *Brew) InstallLatest(name string) error { return m.Install(name, "") }
 
-func (Brew) Uninstall(name string) error {
-	path, err := exec.LookPath("brew")
+func (m *Brew) Uninstall(name string) error {
+	path, err := m.locator.Resolve("brew")
 	if err != nil {
 		return errors.New("not found in PATH")
 	}

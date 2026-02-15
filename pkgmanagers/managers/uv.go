@@ -16,6 +16,10 @@ func (Uv) Detect() (DetectResult, error) {
 	return DetectResult{Available: false, Platform: common.CurrentPlatform()}, errors.New("not found in PATH")
 }
 
+func (Uv) GetVersion() (string, error) {
+	return "", errors.New("not implemented")
+}
+
 func (Uv) Install(name string, version string) error { return nil }
 func (Uv) InstallLatest(name string) error { return nil }
 func (Uv) Uninstall(name string) error { return nil }

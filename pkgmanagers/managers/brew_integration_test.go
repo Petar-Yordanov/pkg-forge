@@ -17,6 +17,28 @@ func TestBrew_Detect(t *testing.T) {
 	}
 }
 
+func TestBrew_GetVersion(t *testing.T) {
+	m := managers.Brew{}
+
+	r, _ := m.Detect()
+	if !r.Available {
+		t.Skipf("brew not available")
+	}
+
+	v, err := m.GetVersion()
+	if err != nil {
+		t.Fatalf("get version failed: %v", err)
+	}
+	v = strings.TrimSpace(v)
+	if v == "" {
+		t.Fatalf("expected non-empty version")
+	}
+
+	if !strings.HasPrefix(v, "Homebrew") {
+		t.Fatalf("unexpected version output: %q", v)
+	}
+}
+
 func TestBrew_Install_Uninstall(t *testing.T) {
 	m := managers.Brew{}
 

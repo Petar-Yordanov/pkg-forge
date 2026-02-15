@@ -1,48 +1,49 @@
 package managers
 
 import (
-	"errors"
-	"os/exec"
 	"regexp"
 	"time"
 
 	"github.com/Petar-Yordanov/pkg-forge/common"
-	"github.com/samber/lo"
 )
 
-type Scoop struct{}
-
-func (Scoop) ID() string { return "scoop" }
-func (Scoop) DisplayName() string { return "Scoop" }
-func (Scoop) Platforms() []common.Platform { return []common.Platform{common.PlatformWindows} }
-
-func (Scoop) Detect() (DetectResult, error) {
-	cur := common.CurrentPlatform()
-
-	bin, ok := lo.Find([]string{"scoop", "scoop.cmd"}, func(c string) bool {
-		_, err := exec.LookPath(c)
-		return err == nil
-	})
-	if !ok {
-		return DetectResult{Available: false, Platform: cur}, errors.New("not found in PATH")
-	}
-
-	path, _ := exec.LookPath(bin)
-
-	out, err := Command(bin).Args("--version").Timeout(2 * time.Second).RunTrimOutput()
-	if err != nil {
-		return DetectResult{Available: true, Path: path, Platform: cur}, nil
-	}
-
-	return DetectResult{Available: true, Path: path, Version: parseScoopVersion(out), Platform: cur}, nil
+type Scoop struct {
+	locator ToolLocator
 }
 
-func (Scoop) Install(name string, version string) error {
-	bin, ok := lo.Find([]string{"scoop", "scoop.cmd"}, func(c string) bool {
-		_, err := exec.LookPath(c)
-		return err == nil
-	})
-	if !ok {
+func (*Scoop) ID() string          { return "scoop" }
+func (*Scoop) DisplayName() string { return "Scoop" }
+func (*Scoop) Platforms() []common.Platform {
+	return []common.Platform{common.PlatformWindows}
+}
+
+func (m *Scoop) Detect() (DetectResult, error) {
+	cur := common.CurrentPlatform()
+
+	path, err := m.locator.Resolve("scoop.cmd", "scoop")
+	if err != nil {
+		return DetectResult{Available: false, Platform: cur}, err
+	}
+
+	return DetectResult{Available: true, Path: path, Platform: cur}, nil
+}
+
+func (m *Scoop) GetVersion() (string, error) {
+	path, err := m.locator.Resolve("scoop.cmd", "scoop")
+	if err != nil {
+		return "", err
+	}
+
+	out, err := Command(path).Args("--version").Timeout(2 * time.Second).RunTrimOutput()
+	if err != nil {
+		return "", err
+	}
+	return parseScoopVersion(out), nil
+}
+
+func (m *Scoop) Install(name string, version string) error {
+	path, err := m.locator.Resolve("scoop.cmd", "scoop")
+	if err != nil {
 		return nil
 	}
 
@@ -51,22 +52,19 @@ func (Scoop) Install(name string, version string) error {
 		pkg = name + "@" + version
 	}
 
-	_, err := Command(bin).Args("install", pkg).RunTrimOutput()
+	_, err = Command(path).Args("install", pkg).RunTrimOutput()
 	return err
 }
 
-func (Scoop) InstallLatest(name string) error { return (Scoop{}).Install(name, "") }
+func (m *Scoop) InstallLatest(name string) error { return m.Install(name, "") }
 
-func (Scoop) Uninstall(name string) error {
-	bin, ok := lo.Find([]string{"scoop", "scoop.cmd"}, func(c string) bool {
-		_, err := exec.LookPath(c)
-		return err == nil
-	})
-	if !ok {
+func (m *Scoop) Uninstall(name string) error {
+	path, err := m.locator.Resolve("scoop.cmd", "scoop")
+	if err != nil {
 		return nil
 	}
 
-	_, err := Command(bin).Args("uninstall", name).RunTrimOutput()
+	_, err = Command(path).Args("uninstall", name).RunTrimOutput()
 	return err
 }
 

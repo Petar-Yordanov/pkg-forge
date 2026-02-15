@@ -2,6 +2,7 @@ package pkgmanagers
 
 import (
 	"context"
+
 	"github.com/Petar-Yordanov/pkg-forge/common"
 	"github.com/samber/lo"
 )
@@ -39,7 +40,14 @@ func DetectAll(ctx context.Context) []ManagerStatus {
 
 		st.Available = dr.Available
 		st.Path = dr.Path
-		st.Version = dr.Version
+
+		// Version is best-effort and non-fatal.
+		if dr.Available {
+			if ver, verr := m.GetVersion(); verr == nil {
+				st.Version = ver
+			}
+		}
+
 		out = append(out, st)
 	}
 

@@ -13,7 +13,12 @@ func (Cargo) DisplayName() string { return "Cargo" }
 func (Cargo) Platforms() []common.Platform { return []common.Platform{common.PlatformWindows, common.PlatformLinux, common.PlatformMacOS} }
 
 func (Cargo) Detect() (DetectResult, error) {
-	return DetectResult{Available: false, Platform: common.CurrentPlatform()}, errors.New("not found in PATH")
+	return DetectResult{Available: false, Platform: common.CurrentPlatform()},
+		errors.New("not applicable on this platform")
+}
+
+func (Cargo) GetVersion() (string, error) {
+	return "", errors.New("not implemented")
 }
 
 func (Cargo) Install(name string, version string) error { return nil }

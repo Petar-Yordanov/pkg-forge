@@ -1,47 +1,48 @@
 package managers
 
 import (
-	"errors"
-	"os/exec"
 	"time"
 
 	"github.com/Petar-Yordanov/pkg-forge/common"
-	"github.com/samber/lo"
 )
 
-type Choco struct{}
-
-func (Choco) ID() string { return "choco" }
-func (Choco) DisplayName() string { return "Chocolatey" }
-func (Choco) Platforms() []common.Platform { return []common.Platform{common.PlatformWindows} }
-
-func (Choco) Detect() (DetectResult, error) {
-	cur := common.CurrentPlatform()
-
-	bin, ok := lo.Find([]string{"choco", "choco.exe"}, func(c string) bool {
-		_, err := exec.LookPath(c)
-		return err == nil
-	})
-	if !ok {
-		return DetectResult{Available: false, Platform: cur}, errors.New("not found in PATH")
-	}
-
-	path, _ := exec.LookPath(bin)
-
-	out, err := Command(bin).Args("--version").Timeout(2 * time.Second).RunTrimOutput()
-	if err != nil {
-		return DetectResult{Available: true, Path: path, Platform: cur}, nil
-	}
-
-	return DetectResult{Available: true, Path: path, Version: out, Platform: cur}, nil
+type Choco struct {
+	locator ToolLocator
 }
 
-func (Choco) Install(name string, version string) error {
-	bin, ok := lo.Find([]string{"choco", "choco.exe"}, func(c string) bool {
-		_, err := exec.LookPath(c)
-		return err == nil
-	})
-	if !ok {
+func (*Choco) ID() string          { return "choco" }
+func (*Choco) DisplayName() string { return "Chocolatey" }
+func (*Choco) Platforms() []common.Platform {
+	return []common.Platform{common.PlatformWindows}
+}
+
+func (m *Choco) Detect() (DetectResult, error) {
+	cur := common.CurrentPlatform()
+
+	path, err := m.locator.Resolve("choco.exe", "choco")
+	if err != nil {
+		return DetectResult{Available: false, Platform: cur}, err
+	}
+
+	return DetectResult{Available: true, Path: path, Platform: cur}, nil
+}
+
+func (m *Choco) GetVersion() (string, error) {
+	path, err := m.locator.Resolve("choco.exe", "choco")
+	if err != nil {
+		return "", err
+	}
+
+	out, err := Command(path).Args("--version").Timeout(2 * time.Second).RunTrimOutput()
+	if err != nil {
+		return "", err
+	}
+	return out, nil
+}
+
+func (m *Choco) Install(name string, version string) error {
+	path, err := m.locator.Resolve("choco.exe", "choco")
+	if err != nil {
 		return nil
 	}
 
@@ -49,21 +50,18 @@ func (Choco) Install(name string, version string) error {
 	if version != "" {
 		args = []string{"install", name, "--version", version, "-y"}
 	}
-	_, err := Command(bin).Args(args...).RunTrimOutput()
+	_, err = Command(path).Args(args...).RunTrimOutput()
 	return err
 }
 
-func (Choco) InstallLatest(name string) error { return (Choco{}).Install(name, "") }
+func (m *Choco) InstallLatest(name string) error { return m.Install(name, "") }
 
-func (Choco) Uninstall(name string) error {
-	bin, ok := lo.Find([]string{"choco", "choco.exe"}, func(c string) bool {
-		_, err := exec.LookPath(c)
-		return err == nil
-	})
-	if !ok {
+func (m *Choco) Uninstall(name string) error {
+	path, err := m.locator.Resolve("choco.exe", "choco")
+	if err != nil {
 		return nil
 	}
 
-	_, err := Command(bin).Args("uninstall", name, "-y").RunTrimOutput()
+	_, err = Command(path).Args("uninstall", name, "-y").RunTrimOutput()
 	return err
 }

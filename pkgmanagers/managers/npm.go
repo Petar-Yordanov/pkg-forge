@@ -16,6 +16,10 @@ func (Npm) Detect() (DetectResult, error) {
 	return DetectResult{Available: false, Platform: common.CurrentPlatform()}, errors.New("not found in PATH")
 }
 
+func (Npm) GetVersion() (string, error) {
+	return "", errors.New("not implemented")
+}
+
 func (Npm) Install(name string, version string) error { return nil }
 func (Npm) InstallLatest(name string) error { return nil }
 func (Npm) Uninstall(name string) error { return nil }

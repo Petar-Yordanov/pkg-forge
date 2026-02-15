@@ -17,6 +17,29 @@ func TestWinget_Detect(t *testing.T) {
 	}
 }
 
+func TestWinget_GetVersion(t *testing.T) {
+	m := managers.Winget{}
+
+	r, _ := m.Detect()
+	if !r.Available {
+		t.Skipf("winget not available")
+	}
+
+	v, err := m.GetVersion()
+	if err != nil {
+		t.Fatalf("get version failed: %v", err)
+	}
+
+	v = strings.TrimSpace(v)
+	if v == "" {
+		t.Fatalf("expected non-empty version")
+	}
+
+	if !regexp.MustCompile(`^\d+(\.\d+){1,3}$`).MatchString(v) {
+		t.Fatalf("unexpected version format: %q", v)
+	}
+}
+
 func TestWinget_Install_Uninstall(t *testing.T) {
 	m := managers.Winget{}
 

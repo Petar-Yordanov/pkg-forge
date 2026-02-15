@@ -8,6 +8,7 @@ type Manager interface {
 	Platforms() []common.Platform
 
 	Detect() (DetectResult, error)
+	GetVersion() (string, error)
 
 	Install(name string, version string) error
 	InstallLatest(name string) error
@@ -17,6 +18,5 @@ type Manager interface {
 type DetectResult struct {
 	Available bool            `json:"available"`
 	Path      string          `json:"path,omitempty"`
-	Version   string          `json:"version,omitempty"`
 	Platform  common.Platform `json:"platform"`
 }
