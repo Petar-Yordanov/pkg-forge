@@ -1,0 +1,21 @@
+entries:
+  - kind: package
+    name: terraform
+    version: "1.7.5"
+    failOnStderr: false
+
+    postInstall:
+      - cmd: echo "terraform post-install hook"
+
+    validation:
+      - cmd: terraform version
+
+      - when: { platform: linux }
+        cmdFile: ./scripts/terraform/validate.sh
+        shell: bash
+        args: [-e]
+
+      - when: { platform: windows }
+        cmdFile: .\scripts\terraform\validate.ps1
+        shell: pwsh
+        args: [-NoProfile]

@@ -1,0 +1,13 @@
+---
+entries:
+  - kind: package
+    name: something
+    version: "1.11.1"
+    failOnStderr: false
+
+    postInstall:
+      - cmd: echo "this step has infinite timeout by default"
+
+      - when: { platform: linux }
+        cmd: bash -lc "sleep 10"
+        timeoutSec: 3

@@ -1,0 +1,17 @@
+---
+entries:
+  - kind: package
+    name: something
+    version: "1.11.1"
+    failOnStderr: false
+
+    postInstall:
+      - when: { platform: linux }
+        cmd: bash -lc "curl -fsSL https://example.com >/dev/null"
+        retries: 5
+        retryDelaySec: 2
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "iwr https://example.com -UseBasicParsing | Out-Null"
+        retries: 5
+        retryDelaySec: 2

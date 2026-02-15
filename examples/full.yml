@@ -1,0 +1,149 @@
+---
+entries:
+  - kind: package
+    name: git
+    version: "2.44.0"
+    failOnStderr: false
+
+    validation:
+      - cmd: git --version
+
+  - kind: package
+    name: all-features
+    version: "1.11.1"
+    failOnStderr: false
+
+    preInstall:
+      - cmd: echo "preparing to install all-features"
+        env:
+          CI: "1"
+          LOG_LEVEL: debug
+        retries: 2
+        retryDelaySec: 1
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Write-Host 'Preparing on Windows'"
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+        timeoutSec: 30
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Write-Host 'preInstall select windows'"
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+
+      - cmdFile: examples\scripts\preinstall\common.sh
+        shell: bash
+        args: [-e]
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+        timeoutSec: 10
+
+    postInstall:
+      - cmd: echo "post-install steps for all-features"
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+        failOnStderr: true
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Start-Service all-features"
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 5
+        retryDelaySec: 2
+
+      - cmd: echo "some tools print warnings to stderr"
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+        failOnStderr: false
+
+      - when: { platform: windows }
+        cmdFile: examples\scripts\postinstall\windows.ps1
+        shell: pwsh
+        args: [-NoProfile, -ExecutionPolicy, Bypass]
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+
+    validation:
+      - cmd: all-features --version
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+
+      - cmdFile: examples\scripts\validate\basic.sh
+        shell: bash
+        args: [-e]
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Write-Host 'validation select windows'"
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        retries: 2
+        retryDelaySec: 1
+
+  - kind: script
+    name: bootstrap-dotfiles
+
+    pre:
+      - cmdFile: examples\scripts\ensure-shell.sh
+        shell: bash
+        args: [-e]
+        failOnStderr: true
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Write-Host 'script pre select windows'"
+
+    cmd:
+      cmdFile: examples\scripts\bootstrap.ps1
+      shell: pwsh
+      args: [-NoProfile, -ExecutionPolicy, Bypass]
+
+    post:
+      - cmd: echo finished dotfiles bootstrap
+
+  - kind: script
+    name: setup-gitconfig
+
+    steps:
+      - cmd: git config --global init.defaultBranch main
+
+      - cmd: git config --global pull.rebase false
+        env:
+          SOME_FLAG: "1"
+        retries: 1
+        retryDelaySec: 1
+        timeoutSec: 5
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Write-Host 'script steps select windows'"
+
+    validation:
+      - cmd: git config --global --get init.defaultBranch
+      - cmd: git config --global --get pull.rebase

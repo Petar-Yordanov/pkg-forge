@@ -1,0 +1,39 @@
+---
+entries:
+  - kind: package
+    name: something
+    version: "1.11.1"
+    failOnStderr: false
+
+    preInstall:
+      - cmd: echo "preparing to install something"
+
+      - when: { platform: linux }
+        cmd: sudo apt-get update
+
+      - when: { platform: macos }
+        cmd: brew update
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Write-Host 'Preparing on Windows'"
+
+    postInstall:
+      - cmd: echo "post-install steps for something"
+
+      - when: { platform: linux }
+        cmd: sudo systemctl enable --now something
+
+      - when: { platform: macos }
+        cmd: brew services start something
+
+      - when: { platform: windows }
+        cmd: pwsh -NoProfile -Command "Start-Service something"
+
+      - cmd: echo "some tools print warnings to stderr"
+        failOnStderr: false
+
+    validation:
+      - cmd: something --version
+
+      - when: { platform: linux }
+        cmd: something status

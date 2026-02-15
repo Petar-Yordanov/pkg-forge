@@ -1,0 +1,25 @@
+---
+entries:
+  - kind: package
+    name: something
+    version: "1.11.1"
+    failOnStderr: false
+
+    defaults:
+      step:
+        retries: 2
+        retryDelaySec: 1
+        timeoutSec: null
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+
+    preInstall:
+      - cmd: echo "inherits env + retries + infinite timeout"
+
+      - cmd: echo "no retries here"
+        retries: 0
+
+      - cmd: echo "override env"
+        env:
+          LOG_LEVEL: debug

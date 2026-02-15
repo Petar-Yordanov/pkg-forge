@@ -1,0 +1,13 @@
+---
+entries:
+  - kind: package
+    name: ripgrep
+    version: "14.1.0"
+    failOnStderr: false
+
+    preInstall:
+      - when: { platform: linux }
+        cmd: sudo apt-get update
+
+    validation:
+      - cmd: rg --version

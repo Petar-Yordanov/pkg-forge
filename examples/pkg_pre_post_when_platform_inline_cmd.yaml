@@ -1,0 +1,9 @@
+---
+entries:
+  - kind: package
+    name: git
+    version: "2.44.0"
+    failOnStderr: false
+
+    validation:
+      - cmd: git --version
