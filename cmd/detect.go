@@ -9,6 +9,9 @@ import (
 
 	"github.com/Petar-Yordanov/pkg-forge/pkgmanagers"
 	"github.com/spf13/cobra"
+
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 )
 
 var detectJSON bool
@@ -26,17 +29,64 @@ var detectCmd = &cobra.Command{
 			return enc.Encode(statuses)
 		}
 
+		headerStyle := lipgloss.NewStyle().Bold(true)
+		okStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("42"))   // green
+		badStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196")) // red
+		muted := lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
+
+		rows := make([][]string, 0, len(statuses))
 		for _, s := range statuses {
+			status := badStyle.Render("missing")
+			path := muted.Render("-")
+			ver := muted.Render("-")
+			errStr := s.Err
+
 			if s.Available {
-				v := s.Version
-				if v == "" {
-					v = "(unknown)"
+				status = okStyle.Render("available")
+				if s.Path != "" {
+					path = s.Path
 				}
-				fmt.Printf("%-8s  available  path=%s  version=%s\n", s.Name, s.Path, v)
-			} else {
-				fmt.Printf("%-8s  missing    %s\n", s.Name, s.Err)
+				if s.Version != "" {
+					ver = s.Version
+				} else {
+					ver = muted.Render("(unknown)")
+				}
+				errStr = ""
 			}
+
+			platforms := "-"
+			if len(s.Platforms) > 0 {
+				platforms = fmt.Sprintf("%v", s.Platforms)
+			}
+
+			rows = append(rows, []string{
+				s.Name,
+				s.Cmd,
+				platforms,
+				status,
+				path,
+				ver,
+				errStr,
+			})
 		}
+
+		t := table.New().
+			Border(lipgloss.RoundedBorder()).
+			BorderStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("238"))).
+			StyleFunc(func(row, col int) lipgloss.Style {
+				if row == 0 {
+					return headerStyle
+				}
+
+				if col == 6 {
+					return lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
+				}
+				return lipgloss.NewStyle()
+			}).
+			Headers("Name", "Cmd", "Platforms", "Status", "Path", "Version", "Error").
+			Rows(rows...)
+
+		fmt.Println(t.Render())
 		return nil
 	},
 }
