@@ -41,7 +41,6 @@ func DetectAll(ctx context.Context) []ManagerStatus {
 		st.Available = dr.Available
 		st.Path = dr.Path
 
-		// Version is best-effort and non-fatal.
 		if dr.Available {
 			if ver, verr := m.GetVersion(); verr == nil {
 				st.Version = ver
