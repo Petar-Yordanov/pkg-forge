@@ -1,16 +1,13 @@
 package managers
 
 import (
-	"errors"
 	"strings"
 	"time"
 
 	"github.com/Petar-Yordanov/pkg-forge/common"
 )
 
-type Brew struct {
-	locator ToolLocator
-}
+type Brew struct{}
 
 func (*Brew) ID() string          { return "brew" }
 func (*Brew) DisplayName() string { return "Homebrew" }
@@ -21,22 +18,21 @@ func (*Brew) Platforms() []common.Platform {
 
 func (m *Brew) Detect() (DetectResult, error) {
 	cur := common.CurrentPlatform()
+	cmd := common.Command("brew")
 
-	path, err := m.locator.Resolve("brew")
-	if err != nil {
+	if err := cmd.Exists(); err != nil {
 		return DetectResult{Available: false, Platform: cur}, err
 	}
 
-	return DetectResult{Available: true, Path: path, Platform: cur}, nil
+	return DetectResult{Available: true, Path: cmd.Path(), Platform: cur}, nil
 }
 
 func (m *Brew) GetVersion() (string, error) {
-	path, err := m.locator.Resolve("brew")
-	if err != nil {
-		return "", err
-	}
+	out, err := common.Command("brew").
+		Args("--version").
+		Timeout(2 * time.Second).
+		RunTrimOutput()
 
-	out, err := Command(path).Args("--version").Timeout(2 * time.Second).RunTrimOutput()
 	if err != nil {
 		return "", err
 	}
@@ -44,34 +40,32 @@ func (m *Brew) GetVersion() (string, error) {
 }
 
 func (m *Brew) Install(name string, version string) error {
-	path, err := m.locator.Resolve("brew")
-	if err != nil {
-		return errors.New("not found in PATH")
-	}
-
 	pkg := name
 	if version != "" && !strings.Contains(name, "@") {
 		pkg = name + "@" + version
 	}
 
-	_, err = Command(path).
+	_, err := common.Command("brew").
 		Args("install", pkg).
 		Timeout(15 * time.Minute).
 		RunTrimOutput()
-	return err
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *Brew) InstallLatest(name string) error { return m.Install(name, "") }
 
 func (m *Brew) Uninstall(name string) error {
-	path, err := m.locator.Resolve("brew")
-	if err != nil {
-		return errors.New("not found in PATH")
-	}
-
-	_, err = Command(path).
+	_, err := common.Command("brew").
 		Args("uninstall", "--force", name).
 		Timeout(15 * time.Minute).
 		RunTrimOutput()
-	return err
+
+	if err != nil {
+		return err
+	}
+	return nil
 }

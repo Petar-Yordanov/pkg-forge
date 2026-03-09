@@ -1,0 +1,15 @@
+---
+entries:
+  - kind: package
+    name: git
+    version: "2.44.0"
+    packageManager: Chocolatey
+    when:
+      platform: [windows]
+
+    preInstall:
+      - cmd: 'echo "preInstall: about to install git 2.44.0"'
+
+    postInstall:
+      - cmd: 'echo "postInstall: installed git, validating..."'
+      - cmd: "git --version"

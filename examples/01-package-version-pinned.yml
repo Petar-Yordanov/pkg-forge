@@ -1,0 +1,22 @@
+---
+entries:
+  - kind: package
+    name: git
+    version: "2.44.0"
+    packageManager: Chocolatey
+    when:
+      platform: [windows]
+
+  - kind: package
+    name: git
+    version: "2.53.0"
+    packageManager: Homebrew
+    when:
+      platform: [macos]
+
+  - kind: package
+    name: ripgrep
+    version: "13.0.0-4"
+    packageManager: Apt
+    when:
+      platform: [linux]

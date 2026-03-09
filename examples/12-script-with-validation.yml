@@ -1,0 +1,12 @@
+---
+entries:
+  - kind: script
+    name: setup-gitconfig-validated
+
+    steps:
+      - cmd: git config --global init.defaultBranch main
+      - cmd: git config --global pull.rebase false
+
+    validation:
+      - cmd: git config --global --get init.defaultBranch
+      - cmd: git config --global --get pull.rebase

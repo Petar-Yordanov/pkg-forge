@@ -1,0 +1,19 @@
+---
+entries:
+  - kind: script
+    name: env-vars-test
+
+    steps:
+      - cmd: pwsh -NoProfile -Command "Write-Host \"CI=$env:CI\"; Write-Host \"LOG_LEVEL=$env:LOG_LEVEL\"; if (-not $env:CI) { Write-Error 'CI missing'; exit 1 }; if (-not $env:LOG_LEVEL) { Write-Error 'LOG_LEVEL missing'; exit 1 }; exit 0"
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        when:
+          platform: [windows]
+
+      - cmd: bash -lc "echo \"CI=${CI}\"; echo \"LOG_LEVEL=${LOG_LEVEL}\"; test -n \"${CI}\"; test -n \"${LOG_LEVEL}\""
+        env:
+          CI: "1"
+          LOG_LEVEL: info
+        when:
+          platform: [linux, macos]

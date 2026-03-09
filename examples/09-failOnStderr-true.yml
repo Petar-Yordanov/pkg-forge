@@ -1,0 +1,23 @@
+---
+entries:
+  - kind: script
+    name: fail-on-stderr-true
+    failOnStderr: true
+
+    steps:
+      - cmd: 'pwsh -NoProfile -Command "Write-Host ''ok: no stderr''; exit 0"'
+        when:
+          platform: [windows]
+
+      - cmd: 'bash -lc "echo ''ok: no stderr''; exit 0"'
+        when:
+          platform: [linux, macos]
+
+      # SHOULD FAIL (even though exit 0): writes to stderr
+      - cmd: 'pwsh -NoProfile -Command "Write-Error ''boom: stderr''; exit 0"'
+        when:
+          platform: [windows]
+
+      - cmd: 'bash -lc "echo ''boom: stderr'' 1>&2; exit 0"'
+        when:
+          platform: [linux, macos]

@@ -1,0 +1,8 @@
+---
+entries:
+  - kind: script
+    name: setup-gitconfig-basic
+
+    steps:
+      - cmd: git config --global init.defaultBranch main
+      - cmd: git config --global pull.rebase false

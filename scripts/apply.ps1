@@ -1,0 +1,16 @@
+.\bin\pkg-forge.exe apply examples/01-package-version-pinned.yml
+.\bin\pkg-forge.exe apply examples/02-package-version-latest.yml
+.\bin\pkg-forge.exe apply examples/03-package-with-validation.yml
+.\bin\pkg-forge.exe apply examples/04-package-preinstall-and-postinstall.yml
+.\bin\pkg-forge.exe apply examples/05-cmd-vs-cmdFile.yml
+.\bin\pkg-forge.exe apply examples/06-timeoutSec.yml
+.\bin\pkg-forge.exe apply examples/07-retries-and-retryDelaySec.yml
+.\bin\pkg-forge.exe apply examples/08-env-vars-print-and-assert.yml
+.\bin\pkg-forge.exe apply examples/09-failOnStderr-true.yml
+.\bin\pkg-forge.exe apply examples/10-failOnStderr-false.yml
+.\bin\pkg-forge.exe apply examples/11-script-steps-basic.yml
+.\bin\pkg-forge.exe apply examples/12-script-with-validation.yml
+.\bin\pkg-forge.exe apply examples/13-script-with-when.yml
+.\bin\pkg-forge.exe apply examples/14-script-cmdFile-only.yml
+.\bin\pkg-forge.exe apply examples/15-script-timeout-retries-env.yml
+.\bin\pkg-forge.exe apply examples/16-entry-level-vs-step-level-overrides.yml
