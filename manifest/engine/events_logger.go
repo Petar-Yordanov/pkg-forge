@@ -53,6 +53,14 @@ func (l *LogEvents) OnInstall(e parser.Entry) {
 	)
 }
 
+func (l *LogEvents) OnUninstall(e parser.Entry) {
+	fmt.Printf("[DO]    uninstall name=%s%s%s\n",
+		e.Name,
+		fmtOpt(" pm=", e.PackageManager),
+		fmtOpt(" version=", e.Version),
+	)
+}
+
 func (l *LogEvents) OnError(e parser.Entry, err error) {
 	fmt.Printf("[ERR]   kind=%s name=%s error=%v\n", e.Kind, e.Name, err)
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -19,6 +20,7 @@ var (
 
 	ErrToolNotFound  = errors.New("not found in PATH")
 	ErrProbeTimedOut = errors.New("probe timed out")
+	ErrStderrOutput  = errors.New("stderr output detected")
 )
 
 type Cmd struct {
@@ -26,10 +28,12 @@ type Cmd struct {
 	binPath    string
 	binName    string
 
-	args       []string
-	timeout    time.Duration
-	retries    int
-	retryDelay time.Duration
+	args         []string
+	timeout      time.Duration
+	retries      int
+	retryDelay   time.Duration
+	env          map[string]string
+	failOnStderr bool
 
 	resolveOnce sync.Once
 	resolveErr  error
@@ -65,6 +69,24 @@ func (c *Cmd) RetryDelay(d time.Duration) *Cmd {
 	}
 
 	c.retryDelay = d
+	return c
+}
+
+func (c *Cmd) Env(env map[string]string) *Cmd {
+	if len(env) == 0 {
+		c.env = nil
+		return c
+	}
+
+	c.env = make(map[string]string, len(env))
+	for k, v := range env {
+		c.env[k] = v
+	}
+	return c
+}
+
+func (c *Cmd) FailOnStderr(v bool) *Cmd {
+	c.failOnStderr = v
 	return c
 }
 
@@ -122,7 +144,6 @@ func (c *Cmd) Run() (string, error) {
 
 func (c *Cmd) ensureResolved() error {
 	c.resolveOnce.Do(func() {
-
 		if len(c.candidates) == 0 {
 			c.resolveErr = ErrEmptyBin
 			return
@@ -157,6 +178,14 @@ func (c *Cmd) runOnce() (string, error) {
 	}
 
 	cmd := exec.CommandContext(ctx, c.binPath, c.args...)
+	if len(c.env) > 0 {
+		env := os.Environ()
+		for k, v := range c.env {
+			env = append(env, k+"="+v)
+		}
+		cmd.Env = env
+	}
+
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -175,11 +204,17 @@ func (c *Cmd) runOnce() (string, error) {
 		return "", errors.New(msg)
 	}
 
-	out := strings.TrimSpace(stdout.String())
-	if out == "" {
-		out = strings.TrimSpace(stderr.String())
+	stdoutText := strings.TrimSpace(stdout.String())
+	stderrText := strings.TrimSpace(stderr.String())
+
+	if c.failOnStderr && stderrText != "" {
+		return "", fmt.Errorf("%w: %s", ErrStderrOutput, stderrText)
 	}
-	return out, nil
+
+	if stdoutText != "" {
+		return stdoutText, nil
+	}
+	return stderrText, nil
 }
 
 func (c *Cmd) RunTrimOutput() (string, error) {

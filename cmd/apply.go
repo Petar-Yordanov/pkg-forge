@@ -2,20 +2,20 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/Petar-Yordanov/pkg-forge/manifest/engine"
 	"github.com/Petar-Yordanov/pkg-forge/manifest/parser"
-	"github.com/Petar-Yordanov/pkg-forge/manifest/validator"
+	validate "github.com/Petar-Yordanov/pkg-forge/manifest/validator"
 	"github.com/spf13/cobra"
 )
 
 var applyCmd = &cobra.Command{
 	Use:   "apply <file.yml>",
-	Short: "Parse a YAML file and optionally apply it",
+	Short: "Parse, validate, plan, and apply a manifest",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := args[0]
-		doApply, _ := cmd.Flags().GetBool("apply")
 
 		docs, err := parser.ParseFile(path)
 		if err != nil {
@@ -32,15 +32,31 @@ var applyCmd = &cobra.Command{
 			}
 		}
 
-		_ = doApply
+		statePath := filepath.Join(filepath.Dir(path), ".pkg-forge-state.sqlite")
+		store, err := engine.OpenStateStore(statePath)
+		if err != nil {
+			return fmt.Errorf("open state store %s: %w", statePath, err)
+		}
+		defer store.Close()
 
 		ctx := engine.NewDefaultContext(&engine.LogEvents{})
+		ctx.ManifestPath = path
+		ctx.ManifestName = filepath.Base(path)
+		ctx.State = store
+
 		r := engine.NewRunner()
-		return r.RunDocs(ctx, docs)
+
+		plan, err := r.BuildPlan(ctx, docs)
+		if err != nil {
+			return err
+		}
+
+		r.PrintPlan(plan)
+
+		return r.ApplyPlan(ctx, plan)
 	},
 }
 
 func init() {
-	applyCmd.Flags().Bool("apply", false, "Apply the entries (skeleton for now)")
 	rootCmd.AddCommand(applyCmd)
 }

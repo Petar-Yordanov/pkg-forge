@@ -19,20 +19,22 @@ var (
 	ErrRunnerHasSpace    = errors.New("runner must not contain whitespace")
 	ErrRunnerNotFound    = errors.New("runner not found in PATH")
 
-	ErrEmptyScriptPath   = errors.New("missing script path")
-	ErrScriptNotFound    = errors.New("script not found")
-	ErrScriptPathIsDir   = errors.New("script path is a directory")
-	ErrScriptStatFailed  = errors.New("script stat failed")
+	ErrEmptyScriptPath  = errors.New("missing script path")
+	ErrScriptNotFound   = errors.New("script not found")
+	ErrScriptPathIsDir  = errors.New("script path is a directory")
+	ErrScriptStatFailed = errors.New("script stat failed")
 )
 
 type CmdFile struct {
-	runner     string
-	rArgs      []string
-	path       string
-	args       []string
-	timeout    time.Duration
-	retries    int
-	retryDelay time.Duration
+	runner       string
+	rArgs        []string
+	path         string
+	args         []string
+	timeout      time.Duration
+	retries      int
+	retryDelay   time.Duration
+	env          map[string]string
+	failOnStderr bool
 }
 
 func CommandFile(runner string, path string) *CmdFile {
@@ -69,6 +71,24 @@ func (c *CmdFile) RetryDelay(d time.Duration) *CmdFile {
 	}
 
 	c.retryDelay = d
+	return c
+}
+
+func (c *CmdFile) Env(env map[string]string) *CmdFile {
+	if len(env) == 0 {
+		c.env = nil
+		return c
+	}
+
+	c.env = make(map[string]string, len(env))
+	for k, v := range env {
+		c.env[k] = v
+	}
+	return c
+}
+
+func (c *CmdFile) FailOnStderr(v bool) *CmdFile {
+	c.failOnStderr = v
 	return c
 }
 
@@ -151,6 +171,14 @@ func (c *CmdFile) runOnce() (string, error) {
 	allArgs = append(allArgs, c.args...)
 
 	cmd := exec.CommandContext(ctx, c.runner, allArgs...)
+	if len(c.env) > 0 {
+		env := os.Environ()
+		for k, v := range c.env {
+			env = append(env, k+"="+v)
+		}
+		cmd.Env = env
+	}
+
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -172,12 +200,17 @@ func (c *CmdFile) runOnce() (string, error) {
 		return "", errors.New(msg)
 	}
 
-	out := strings.TrimSpace(stdout.String())
-	if out == "" {
-		out = strings.TrimSpace(stderr.String())
+	stdoutText := strings.TrimSpace(stdout.String())
+	stderrText := strings.TrimSpace(stderr.String())
+
+	if c.failOnStderr && stderrText != "" {
+		return "", fmt.Errorf("%w: %s", ErrStderrOutput, stderrText)
 	}
 
-	return out, nil
+	if stdoutText != "" {
+		return stdoutText, nil
+	}
+	return stderrText, nil
 }
 
 func (c *CmdFile) RunTrimOutput() (string, error) {

@@ -22,7 +22,7 @@ func (s *ScriptEntry) Run(ctx *Context) error {
 	for _, st := range s.e.Steps {
 		ctx.Events.OnStep(s.e, st)
 
-		res, err := steps.RunStepSkeleton(ctx.Platform, s.e, st)
+		res, err := steps.RunStep(ctx.Platform, s.e, st)
 		if err != nil {
 			return err
 		}
@@ -34,7 +34,7 @@ func (s *ScriptEntry) Run(ctx *Context) error {
 	for _, st := range s.e.Validation {
 		ctx.Events.OnValidation(s.e, st)
 
-		res, err := steps.RunStepSkeleton(ctx.Platform, s.e, st)
+		res, err := steps.RunStep(ctx.Platform, s.e, st)
 		if err != nil {
 			return err
 		}
@@ -43,5 +43,10 @@ func (s *ScriptEntry) Run(ctx *Context) error {
 		}
 	}
 
+	return nil
+}
+
+func (s *ScriptEntry) Uninstall(ctx *Context) error {
+	_ = ctx
 	return nil
 }

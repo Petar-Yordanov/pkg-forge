@@ -12,6 +12,7 @@ type Events interface {
 
 	OnPreInstall(e parser.Entry, s parser.Step)
 	OnInstall(e parser.Entry)
+	OnUninstall(e parser.Entry)
 	OnPostInstall(e parser.Entry, s parser.Step)
 	OnValidation(e parser.Entry, s parser.Step)
 
