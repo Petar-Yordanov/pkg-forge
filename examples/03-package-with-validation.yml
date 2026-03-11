@@ -1,0 +1,11 @@
+---
+entries:
+  - kind: package
+    name: git
+    version: "2.44.0"
+    packageManager: Chocolatey
+    when:
+      platform: [windows]
+
+    validation:
+      - cmd: git --version

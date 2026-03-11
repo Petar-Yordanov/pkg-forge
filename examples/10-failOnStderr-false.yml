@@ -1,0 +1,24 @@
+---
+entries:
+  - kind: script
+    name: fail-on-stderr-false
+    failOnStderr: false
+
+    steps:
+      # SHOULD PASS
+      - cmd: pwsh -NoProfile -Command "Write-Error 'warning on stderr but exit 0'; exit 0"
+        when:
+          platform: [windows]
+
+      - cmd: bash -lc "echo 'warning on stderr but exit 0' 1>&2; exit 0"
+        when:
+          platform: [linux, macos]
+
+      # SHOULD FAIL
+      - cmd: pwsh -NoProfile -Command "Write-Host 'exiting 7'; exit 7"
+        when:
+          platform: [windows]
+
+      - cmd: bash -lc "echo 'exiting 7'; exit 7"
+        when:
+          platform: [linux, macos]

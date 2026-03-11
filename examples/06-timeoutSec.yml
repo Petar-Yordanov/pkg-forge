@@ -1,0 +1,15 @@
+---
+entries:
+  - kind: script
+    name: timeout-test
+
+    steps:
+      - cmd: pwsh -NoProfile -Command "Start-Sleep -Seconds 10; Write-Host 'done'"
+        timeoutSec: 2
+        when:
+          platform: [windows]
+
+      - cmd: bash -lc "sleep 10; echo done"
+        timeoutSec: 2
+        when:
+          platform: [linux, macos]

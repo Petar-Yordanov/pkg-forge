@@ -1,0 +1,18 @@
+---
+entries:
+  - kind: script
+    name: retries-test
+
+    steps:
+      # Will fail twice, then succeed
+      - cmd: pwsh -NoProfile -Command "$p = Join-Path $env:TEMP 'retry-demo.count'; $n = 0; if (Test-Path $p) { $n = [int](Get-Content $p) }; $n++; Set-Content $p $n; if ($n -lt 3) { Write-Error 'failing on purpose'; exit 1 } else { Write-Host 'success on attempt' $n; exit 0 }"
+        retries: 3
+        retryDelaySec: 1
+        when:
+          platform: [windows]
+
+      - cmd: bash -lc "p=/tmp/retry-demo.count; n=0; [ -f \"$p\" ] && n=$(cat \"$p\"); n=$((n+1)); echo \"$n\" > \"$p\"; if [ \"$n\" -lt 3 ]; then echo 'failing on purpose' 1>&2; exit 1; else echo \"success on attempt $n\"; exit 0; fi"
+        retries: 3
+        retryDelaySec: 1
+        when:
+          platform: [linux, macos]

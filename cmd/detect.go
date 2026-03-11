@@ -30,8 +30,8 @@ var detectCmd = &cobra.Command{
 		}
 
 		headerStyle := lipgloss.NewStyle().Bold(true)
-		okStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("42"))   // green
-		badStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196")) // red
+		okStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("42"))
+		badStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
 		muted := lipgloss.NewStyle().Foreground(lipgloss.Color("244"))
 
 		rows := make([][]string, 0, len(statuses))

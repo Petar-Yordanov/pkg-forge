@@ -1,0 +1,19 @@
+---
+entries:
+  - kind: script
+    name: cmd-vs-cmdFile
+
+    steps:
+      - cmd: echo "This step uses cmd"
+
+      - cmdFile: examples/scripts/echo-hello.sh
+        shell: bash
+        args: ["-e"]
+        when:
+          platform: [linux, macos]
+
+      - cmdFile: examples/scripts/echo-hello.ps1
+        shell: pwsh
+        args: ["-NoProfile"]
+        when:
+          platform: [windows]

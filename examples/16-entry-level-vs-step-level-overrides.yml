@@ -1,0 +1,41 @@
+---
+entries:
+  - kind: script
+    name: entry-vs-step-overrides
+    failOnStderr: false
+    env:
+      TOP_LEVEL: "1"
+
+    steps:
+      # Demonstrates entry-level env is inherited
+      - cmd: pwsh -NoProfile -Command "Write-Host \"TOP_LEVEL=$env:TOP_LEVEL\"; if (-not $env:TOP_LEVEL) { Write-Error 'missing TOP_LEVEL'; exit 1 }; exit 0"
+        when:
+          platform: [windows]
+
+      - cmd: bash -lc "echo \"TOP_LEVEL=${TOP_LEVEL}\"; test -n \"${TOP_LEVEL}\""
+        when:
+          platform: [linux, macos]
+
+      # Demonstrates step-level env overrides / adds
+      - cmd: pwsh -NoProfile -Command "Write-Host \"STEP_ONLY=$env:STEP_ONLY\"; if (-not $env:STEP_ONLY) { Write-Error 'missing STEP_ONLY'; exit 1 }; exit 0"
+        env:
+          STEP_ONLY: "1"
+        when:
+          platform: [windows]
+
+      - cmd: bash -lc "echo \"STEP_ONLY=${STEP_ONLY}\"; test -n \"${STEP_ONLY}\""
+        env:
+          STEP_ONLY: "1"
+        when:
+          platform: [linux, macos]
+
+      # Demonstrates step-level failOnStderr override (this should FAIL if override is honored)
+      - cmd: pwsh -NoProfile -Command "Write-Error 'stderr should fail here'; exit 0"
+        failOnStderr: true
+        when:
+          platform: [windows]
+
+      - cmd: bash -lc "echo 'stderr should fail here' 1>&2; exit 0"
+        failOnStderr: true
+        when:
+          platform: [linux, macos]

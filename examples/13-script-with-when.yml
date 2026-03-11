@@ -1,0 +1,13 @@
+---
+entries:
+  - kind: script
+    name: script-when-platform
+
+    steps:
+      - cmd: echo "linux/macos branch"
+        when:
+          platform: [linux, macos]
+
+      - cmd: pwsh -NoProfile -Command "Write-Host 'windows branch'"
+        when:
+          platform: [windows]
