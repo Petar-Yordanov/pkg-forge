@@ -65,12 +65,12 @@ func (m *Winget) Install(name string, version string) error {
 		return nil
 	}
 
-	// TODO: This needs a more robust solution
-	// Treat "already installed/no upgrade" as success for InstallLatest semantics.
-	l := strings.ToLower(out)
-	if strings.Contains(l, "found an existing package already installed") ||
-		strings.Contains(l, "no available upgrade found") ||
-		strings.Contains(l, "no newer package versions are available") {
+	msg := out
+	if strings.TrimSpace(msg) == "" {
+		msg = err.Error()
+	}
+
+	if wingetAlreadyInstalledOrNoUpgrade(msg) {
 		return nil
 	}
 
@@ -98,12 +98,12 @@ func (m *Winget) InstallLatest(name string) error {
 		return nil
 	}
 
-	// TODO: This needs a more robust solution
-	// Treat "already installed/no upgrade" as success for InstallLatest semantics.
-	l := strings.ToLower(out)
-	if strings.Contains(l, "no available upgrade found") ||
-		strings.Contains(l, "no newer package versions are available") ||
-		strings.Contains(l, "found an existing package already installed") {
+	msg := out
+	if strings.TrimSpace(msg) == "" {
+		msg = err.Error()
+	}
+
+	if wingetAlreadyInstalledOrNoUpgrade(msg) {
 		return nil
 	}
 
@@ -127,4 +127,13 @@ func (m *Winget) Uninstall(name string) error {
 		RunTrimOutput()
 
 	return err
+}
+
+// TODO: Needs a more robust solution in the future
+func wingetAlreadyInstalledOrNoUpgrade(msg string) bool {
+	l := strings.ToLower(msg)
+
+	return strings.Contains(l, "found an existing package already installed") ||
+		strings.Contains(l, "no available upgrade found") ||
+		strings.Contains(l, "no newer package versions are available")
 }
